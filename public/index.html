@@ -2,6 +2,8 @@
 <html>
 <head>
   <title>Resume Keyword Matcher</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="style.css">
 
 </head>
@@ -25,30 +27,32 @@
 
   <script>
     async function handleClick() {
-        const resume = document.getElementById('resumeText').value.trim();
-        const job = document.getElementById('jobText').value.trim();
+      const resume = document.getElementById('resumeText').value.trim();
+      const job = document.getElementById('jobText').value.trim();
     
-        if (!resume || !job) {
-          document.getElementById('output').innerHTML =
-            '<p style="color:red;">Please paste both resume and job description.</p>';
-          return;
-        }
-    
-        const response = await fetch('/match', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ resume, job })
-        });
-    
-        const data = await response.json();
-    
-        document.getElementById('output').innerHTML = `
-          <h3>ATS Match Score: ${data.score}%</h3>
-          <p><b>Missing Keywords:</b></p>
-          <p>${data.missing.join(', ') || 'None 🎯'}</p>
-        `;
+      if (!resume || !job) {
+        document.getElementById('output').innerHTML =
+          '<p style="color:red;">Please paste both resume and job description.</p>';
+        return;
       }
-  </script>
+    
+      const response = await fetch('/match', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resume, job })
+      });
+    
+      const data = await response.json();
+    
+      document.getElementById('output').innerHTML = `
+  <h3>ATS Match Score: ${data.score}%</h3>
+  <p><b>Missing Keywords:</b></p>
+  <p>${data.missing.join(', ') || 'None 🎯'}</p>
+`;
+
+    }
+    </script>
+    
   </div>
   
 

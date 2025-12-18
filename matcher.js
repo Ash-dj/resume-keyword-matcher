@@ -1,44 +1,73 @@
 const stopwords = require('./stopwords');
 
-function cleanText(text) {
+function preprocess(text) {
   return text
     .toLowerCase()
     .replace(/[^a-z\s]/g, '')
     .split(/\s+/)
-    .filter(word =>
-      word.length > 2 && !stopwords.includes(word)
-    );
+    .filter(word => word.length > 2 && !stopwords.includes(word));
 }
 
-function getKeywords(text) {
-  return new Set(cleanText(text));
+function termFrequency(words) {
+  const tf = {};
+  for (const word of words) {
+    tf[word] = (tf[word] || 0) + 1;
+  }
+  return tf;
 }
 
-function matchTexts(resumeText, jobText) {
-  const resumeKeywords = getKeywords(resumeText);
-  const jobKeywords = getKeywords(jobText);
+function computeIDF(resumeTF, jobTF) {
+  const idf = {};
+  const totalDocs = 2;
 
-  const matched = [];
+  const vocabulary = new Set([
+    ...Object.keys(resumeTF),
+    ...Object.keys(jobTF)
+  ]);
+
+  for (const word of vocabulary) {
+    let df = 0;
+    if (resumeTF[word]) df++;
+    if (jobTF[word]) df++;
+
+    idf[word] = Math.log((totalDocs + 1) / (df + 1)) + 1;
+
+  }
+
+  return idf;
+}
+
+function tfidfMatcher(resumeText, jobText) {
+  const resumeWords = preprocess(resumeText);
+  const jobWords = preprocess(jobText);
+
+  const resumeTF = termFrequency(resumeWords);
+  const jobTF = termFrequency(jobWords);
+
+  const idf = computeIDF(resumeTF, jobTF);
+
+  let matchedScore = 0;
+  let totalScore = 0;
   const missing = [];
 
-  for (let word of jobKeywords) {
-    if (resumeKeywords.has(word)) {
-      matched.push(word);
+  for (const word in jobTF) {
+    const weight = jobTF[word] * idf[word];
+    totalScore += weight;
+
+    if (resumeTF[word]) {
+      matchedScore += weight;
     } else {
       missing.push(word);
     }
   }
 
   const score =
-    jobKeywords.size === 0
-      ? 0
-      : Math.round((matched.length / jobKeywords.size) * 100);
+    totalScore === 0 ? 0 : Math.round((matchedScore / totalScore) * 100);
 
   return {
     score,
-    matched,
     missing
   };
 }
 
-module.exports = matchTexts;
+module.exports = tfidfMatcher;

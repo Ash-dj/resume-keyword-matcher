@@ -58,9 +58,7 @@ http://localhost:3000
 ```md
 
 1. Uses keyword matching only (no semantic understanding)
-
 2. Does not parse PDF files
-
 3. Designed to simulate early-stage ATS filtering, not final hiring decisions
 ```
 ---
@@ -68,11 +66,21 @@ http://localhost:3000
 ## 📌 Future Improvements
 ```md
 1. TF-IDF based keyword weighting
-
 2. PDF resume upload
-
 3. Ranking multiple resumes against one job description
 ```
+---
+
+## 🔬 TF-IDF Upgrade
+
+This project was extended to use TF-IDF based keyword weighting instead of simple
+keyword overlap.
+
+### Improvements
+1. Applied IDF smoothing to prevent zero-weight collapse
+2. Added domain-specific stopword filtering for ATS-style job descriptions
+3. Improved relevance scoring for shared technical skills
+
 
 
 

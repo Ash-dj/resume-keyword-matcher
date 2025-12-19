@@ -10,6 +10,9 @@
 <body>
     <div class="container">
   <h1>Resume Keyword Matcher</h1>
+  <label>Upload Resume (PDF)</label>
+<input type="file" id="resumePdf" accept=".pdf" />
+
 
   <h3>Resume</h3>
   <textarea id="resumeText" rows="8" cols="80"
@@ -29,17 +32,26 @@
     async function handleClick() {
       const resume = document.getElementById('resumeText').value.trim();
       const job = document.getElementById('jobText').value.trim();
+      const pdfFile = document.getElementById('resumePdf').files[0];
     
-      if (!resume || !job) {
+      if (!job || (!resume && !pdfFile)) {
         document.getElementById('output').innerHTML =
-          '<p style="color:red;">Please paste both resume and job description.</p>';
+          '<p style="color:red;">Please upload a resume PDF or paste resume text, and provide a job description.</p>';
         return;
+      }
+    
+      const formData = new FormData();
+      formData.append('job', job);
+    
+      if (pdfFile) {
+        formData.append('resumePdf', pdfFile);
+      } else {
+        formData.append('resume', resume);
       }
     
       const response = await fetch('/match', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resume, job })
+        body: formData
       });
     
       const data = await response.json();
@@ -47,11 +59,13 @@
       document.getElementById('output').innerHTML = `
   <h3>ATS Match Score: ${data.score}%</h3>
   <p><b>Missing Keywords:</b></p>
-  <p>${data.missing.join(', ') || 'None 🎯'}</p>
+  <p>${data.missing.length ? data.missing.join(', ') : 'None 🎯'}</p>
 `;
+
 
     }
     </script>
+    
     
   </div>
   

@@ -81,6 +81,28 @@ keyword overlap.
 2. Added domain-specific stopword filtering for ATS-style job descriptions
 3. Improved relevance scoring for shared technical skills
 
+---
+
+## 📄 PDF Resume Support
+
+The application supports uploading resume PDFs in addition to pasted text.
+
+- PDF resumes are uploaded via the frontend and processed server-side
+- Text is extracted using `pdf-parse`
+- Extracted content is cleaned to remove formatting noise
+- The processed text is fed into the same TF-IDF matching pipeline
+
+If a PDF is uploaded, it takes priority over pasted resume text.
+
+---
+
+## 🧠 Matching Logic Notes
+
+- Uses TF-IDF with smoothing to weight important job description keywords
+- Removes generic role and boilerplate terms using a custom stopword list
+- Includes a fallback mechanism to prevent empty keyword sets for short or noisy job descriptions
+- Performs exact keyword matching to simulate early-stage ATS behavior
+- Supports both pasted text and PDF resumes for realistic ATS-style screening
 
 
 

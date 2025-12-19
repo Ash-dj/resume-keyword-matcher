@@ -1,13 +1,22 @@
 const stopwords = require('./stopwords');
 
-function preprocess(text) {
+/**
+ * Tokenizes text into lowercase alphabetic words.
+ * Keeps length > 2 to remove noise.
+ */
+function tokenize(text) {
   return text
     .toLowerCase()
+    .replace(/node\.js/g, 'nodejs') // light normalization
+    .replace(/apis?/g, 'api')       // api / apis → api
     .replace(/[^a-z\s]/g, '')
     .split(/\s+/)
-    .filter(word => word.length > 2 && !stopwords.includes(word));
+    .filter(word => word.length > 2);
 }
 
+/**
+ * Computes term frequency for a list of words.
+ */
 function termFrequency(words) {
   const tf = {};
   for (const word of words) {
@@ -16,6 +25,9 @@ function termFrequency(words) {
   return tf;
 }
 
+/**
+ * Computes IDF with smoothing for two documents (resume + JD).
+ */
 function computeIDF(resumeTF, jobTF) {
   const idf = {};
   const totalDocs = 2;
@@ -30,16 +42,29 @@ function computeIDF(resumeTF, jobTF) {
     if (resumeTF[word]) df++;
     if (jobTF[word]) df++;
 
+    // smoothed IDF
     idf[word] = Math.log((totalDocs + 1) / (df + 1)) + 1;
-
   }
 
   return idf;
 }
 
+/**
+ * Main TF-IDF based matcher.
+ * Uses strict stopword filtering with a JD fallback
+ * to avoid empty keyword sets.
+ */
 function tfidfMatcher(resumeText, jobText) {
-  const resumeWords = preprocess(resumeText);
-  const jobWords = preprocess(jobText);
+  const resumeTokens = tokenize(resumeText);
+  const jobTokens = tokenize(jobText);
+
+  let resumeWords = resumeTokens.filter(w => !stopwords.includes(w));
+  let jobWords = jobTokens.filter(w => !stopwords.includes(w));
+
+  // JD fallback: prevent empty keyword sets
+  if (jobWords.length === 0) {
+    jobWords = jobTokens;
+  }
 
   const resumeTF = termFrequency(resumeWords);
   const jobTF = termFrequency(jobWords);
@@ -62,12 +87,11 @@ function tfidfMatcher(resumeText, jobText) {
   }
 
   const score =
-    totalScore === 0 ? 0 : Math.round((matchedScore / totalScore) * 100);
+    totalScore === 0
+      ? 0
+      : Math.round((matchedScore / totalScore) * 100);
 
-  return {
-    score,
-    missing
-  };
+  return { score, missing };
 }
 
 module.exports = tfidfMatcher;
